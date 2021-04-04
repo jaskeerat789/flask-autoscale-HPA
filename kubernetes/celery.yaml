@@ -1,0 +1,45 @@
+# namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: celery-workers
+---
+# secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: celery-workers-secret
+  namespace: celery-workers
+type: Opaque
+data:
+  CELERY_BROKER_URL: cHlhbXFwOi8vZ3Vlc3RAbG9jYWxob3N0Ly8=
+  CELERY_RESULT_BACKEND: cnBjOi8v
+  SECRET_KEY: dGVzdA==
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: celery-workers
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: celery-worker
+  template:
+    metadata:
+      labels:
+        name: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: xasag94215/flask-celery-microservice
+          command:
+            - "bash"
+            - "-c"
+            - "celery -A main.celery worker -l info"
+          envFrom:
+            - secretRef:
+                name: celery-workers-secret
+---

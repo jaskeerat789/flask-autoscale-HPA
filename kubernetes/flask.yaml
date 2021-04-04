@@ -1,0 +1,56 @@
+# namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flask-backend
+---
+# secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flask-secret
+  namespace: flask-backend
+type: Opaque
+data:
+  CELERY_BROKER_URL: cHlhbXFwOi8vZ3Vlc3RAbG9jYWxob3N0Ly8=
+  CELERY_RESULT_BACKEND: cnBjOi8v
+  SECRET_KEY: dGVzdA==
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-server
+  namespace: flask-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: flask-server
+  template:
+    metadata:
+      labels:
+        name: flask-server
+    spec:
+      containers:
+        - name: flask-server
+          image: xasag94215/flask-celery-microservice
+          envFrom:
+            - secretRef:
+                name: flask-secret
+          ports:
+            - containerPort: 5000
+              name: rest
+---
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-server
+  namespace: flask-backend
+spec:
+  selector:
+    name: flask-server
+  ports:
+    - port: 80
+      targetPort: rest
